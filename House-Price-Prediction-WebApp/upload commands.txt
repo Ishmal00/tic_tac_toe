@@ -1,0 +1,7 @@
+echo "# tic_tac_toe" >> README.md
+git init
+git add README.md
+git commit -m "first commit"
+git branch -M main
+git remote add origin https://github.com/Ishmal00/tic_tac_toe.git
+git push -u origin main
