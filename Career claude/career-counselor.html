@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CareerQuest — Discover Your Path</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ─────────────────────────────────────────────
+       CSS VARIABLES & RESET
+    ───────────────────────────────────────────── */
+    :root {
+      --bg:       #0d0d0d;
+      --surface:  #161616;
+      --card:     #1e1e1e;
+      --border:   #2a2a2a;
+      --text:     #f0ece3;
+      --muted:    #7a7470;
+      --accent1:  #f5c842;  /* golden yellow */
+      --accent2:  #e8533a;  /* warm red */
+      --accent3:  #5cceaa;  /* mint green */
+      --accent4:  #8b73f7;  /* soft purple */
+      --accent5:  #4db9e8;  /* sky blue */
+      --radius:   18px;
+      --transition: 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 16px;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow-x: hidden;
+    }
+
+    /* Ambient background blobs */
+    body::before, body::after {
+      content: '';
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: 0.12;
+      pointer-events: none;
+      z-index: 0;
+    }
+    body::before {
+      width: 500px; height: 500px;
+      background: var(--accent4);
+      top: -100px; left: -100px;
+      animation: drift1 12s ease-in-out infinite alternate;
+    }
+    body::after {
+      width: 400px; height: 400px;
+      background: var(--accent2);
+      bottom: -80px; right: -80px;
+      animation: drift2 15s ease-in-out infinite alternate;
+    }
+    @keyframes drift1 { to { transform: translate(60px, 80px); } }
+    @keyframes drift2 { to { transform: translate(-60px, -60px); } }
+
+    /* ─────────────────────────────────────────────
+       MAIN APP WRAPPER
+    ───────────────────────────────────────────── */
+    #app {
+      position: relative;
+      z-index: 1;
+      width: min(640px, 95vw);
+      padding: 20px 0 40px;
+    }
+
+    /* ─────────────────────────────────────────────
+       HEADER
+    ───────────────────────────────────────────── */
+    header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .logo {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 800;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--accent1);
+    }
+    .logo span { color: var(--muted); }
+
+    /* ─────────────────────────────────────────────
+       PROGRESS BAR
+    ───────────────────────────────────────────── */
+    .progress-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+    .progress-track {
+      flex: 1;
+      height: 4px;
+      background: var(--border);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent1), var(--accent3));
+      border-radius: 99px;
+      transition: width 0.5s ease;
+      width: 0%;
+    }
+    .progress-label {
+      font-size: 0.78rem;
+      color: var(--muted);
+      font-weight: 500;
+      white-space: nowrap;
+      font-family: 'Syne', sans-serif;
+    }
+
+    /* ─────────────────────────────────────────────
+       QUESTION CARD
+    ───────────────────────────────────────────── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 40px 36px;
+      position: relative;
+      overflow: hidden;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent1), var(--accent3), var(--accent4));
+    }
+
+    /* Question number tag */
+    .q-tag {
+      display: inline-block;
+      font-family: 'Syne', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent1);
+      background: rgba(245,200,66,0.12);
+      border: 1px solid rgba(245,200,66,0.25);
+      padding: 4px 12px;
+      border-radius: 99px;
+      margin-bottom: 20px;
+    }
+
+    .question-text {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.25rem, 3vw, 1.65rem);
+      font-weight: 700;
+      line-height: 1.35;
+      margin-bottom: 32px;
+      color: var(--text);
+    }
+
+    /* ─────────────────────────────────────────────
+       ANSWER OPTIONS
+    ───────────────────────────────────────────── */
+    .options {
+      display: grid;
+      gap: 12px;
+    }
+    .options.cols-2 { grid-template-columns: 1fr 1fr; }
+
+    .opt-btn {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 400;
+      cursor: pointer;
+      text-align: left;
+      transition: border-color 0.2s, background 0.2s, transform var(--transition), box-shadow 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: relative;
+      overflow: hidden;
+    }
+    .opt-btn .emoji {
+      font-size: 1.4rem;
+      flex-shrink: 0;
+      transition: transform 0.3s;
+    }
+    .opt-btn:hover {
+      border-color: var(--accent1);
+      background: rgba(245,200,66,0.06);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    }
+    .opt-btn:hover .emoji { transform: scale(1.2) rotate(-5deg); }
+    .opt-btn:active { transform: scale(0.97); }
+    .opt-btn.selected {
+      border-color: var(--accent3);
+      background: rgba(92,206,170,0.1);
+      box-shadow: 0 0 0 3px rgba(92,206,170,0.15);
+    }
+
+    /* Ripple effect on click */
+    .opt-btn .ripple {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(245,200,66,0.2);
+      transform: scale(0);
+      animation: ripple-anim 0.5s linear;
+      pointer-events: none;
+    }
+    @keyframes ripple-anim {
+      to { transform: scale(4); opacity: 0; }
+    }
+
+    /* ─────────────────────────────────────────────
+       CARD TRANSITIONS
+    ───────────────────────────────────────────── */
+    .card.slide-out {
+      animation: slideOut 0.3s ease forwards;
+    }
+    .card.slide-in {
+      animation: slideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+    @keyframes slideOut {
+      to { opacity: 0; transform: translateX(-40px) scale(0.96); }
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(40px) scale(0.96); }
+      to   { opacity: 1; transform: translateX(0) scale(1); }
+    }
+
+    /* ─────────────────────────────────────────────
+       RESULT SCREEN
+    ───────────────────────────────────────────── */
+    .result-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 44px 36px;
+      position: relative;
+      overflow: hidden;
+      animation: slideIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+    .result-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, var(--accent2), var(--accent1), var(--accent3));
+    }
+
+    .result-badge {
+      font-size: 4rem;
+      margin-bottom: 16px;
+      display: block;
+      animation: popIn 0.6s 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    }
+    @keyframes popIn {
+      from { transform: scale(0) rotate(-15deg); opacity: 0; }
+      to   { transform: scale(1) rotate(0); opacity: 1; }
+    }
+
+    .result-tag {
+      display: inline-block;
+      font-family: 'Syne', sans-serif;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent2);
+      background: rgba(232,83,58,0.12);
+      border: 1px solid rgba(232,83,58,0.3);
+      padding: 4px 12px;
+      border-radius: 99px;
+      margin-bottom: 14px;
+    }
+
+    .result-title {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.6rem, 4vw, 2.2rem);
+      font-weight: 800;
+      margin-bottom: 16px;
+      background: linear-gradient(135deg, var(--text), var(--accent1));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .result-desc {
+      font-size: 1rem;
+      color: #b0aa9f;
+      line-height: 1.7;
+      margin-bottom: 28px;
+    }
+
+    /* Trait pills */
+    .traits {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 32px;
+    }
+    .trait {
+      font-size: 0.82rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 99px;
+      padding: 5px 14px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    /* Alt careers */
+    .alt-section {
+      border-top: 1px solid var(--border);
+      padding-top: 24px;
+      margin-bottom: 28px;
+    }
+    .alt-label {
+      font-family: 'Syne', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+    .alt-careers {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .alt-career {
+      font-size: 0.85rem;
+      background: rgba(139,115,247,0.1);
+      border: 1px solid rgba(139,115,247,0.25);
+      color: var(--accent4);
+      border-radius: 99px;
+      padding: 5px 14px;
+    }
+
+    /* Restart button */
+    .restart-btn {
+      background: var(--accent1);
+      color: #0d0d0d;
+      border: none;
+      border-radius: 12px;
+      padding: 15px 32px;
+      font-family: 'Syne', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      transition: transform var(--transition), box-shadow 0.2s;
+    }
+    .restart-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 30px rgba(245,200,66,0.3);
+    }
+    .restart-btn:active { transform: scale(0.97); }
+
+    /* ─────────────────────────────────────────────
+       WELCOME / INTRO SCREEN
+    ───────────────────────────────────────────── */
+    .intro-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 48px 36px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      animation: slideIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+    .intro-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, var(--accent4), var(--accent1), var(--accent3));
+    }
+    .intro-icon { font-size: 3.5rem; margin-bottom: 20px; display: block; }
+    .intro-title {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.6rem, 4vw, 2.4rem);
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 14px;
+    }
+    .intro-title em {
+      font-style: normal;
+      color: var(--accent1);
+    }
+    .intro-sub {
+      color: var(--muted);
+      font-size: 1rem;
+      line-height: 1.65;
+      margin-bottom: 36px;
+      max-width: 420px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .start-btn {
+      background: var(--accent1);
+      color: #0d0d0d;
+      border: none;
+      border-radius: 12px;
+      padding: 16px 40px;
+      font-family: 'Syne', sans-serif;
+      font-size: 1rem;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      transition: transform var(--transition), box-shadow 0.2s;
+    }
+    .start-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 30px rgba(245,200,66,0.35);
+    }
+    .start-btn:active { transform: scale(0.97); }
+
+    /* Info pills row on intro */
+    .intro-pills {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 32px;
+    }
+    .intro-pill {
+      font-size: 0.82rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 99px;
+      padding: 6px 16px;
+      color: var(--muted);
+    }
+    .intro-pill span { margin-right: 4px; }
+
+    /* ─────────────────────────────────────────────
+       RESPONSIVE
+    ───────────────────────────────────────────── */
+    @media (max-width: 480px) {
+      .card, .result-card, .intro-card { padding: 28px 20px; }
+      .options.cols-2 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="app">
+  <header>
+    <div class="logo">Career<span>Quest</span></div>
+  </header>
+  <!-- Progress bar (hidden on intro/result) -->
+  <div class="progress-wrap" id="progressWrap" style="display:none">
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+    <div class="progress-label" id="progressLabel">1 / 10</div>
+  </div>
+  <!-- Dynamic screen renders here -->
+  <div id="screen"></div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   DATA — Questions & Career Paths
+═══════════════════════════════════════════════════════════════ */
+
+/**
+ * QUESTIONS
+ * Each question has:
+ *  - id: unique string key
+ *  - text: the question (max ~12 words)
+ *  - options: array of { emoji, label, value }
+ *  - next: function(answers) → next question id, or null for result
+ */
+const QUESTIONS = {
+
+  q1: {
+    id: 'q1',
+    text: 'How do you prefer spending most of your time?',
+    options: [
+      { emoji: '💻', label: 'Building & making things',   value: 'builder'  },
+      { emoji: '🧠', label: 'Solving deep problems',       value: 'thinker'  },
+      { emoji: '🎨', label: 'Creating & expressing ideas', value: 'creator'  },
+      { emoji: '🤝', label: 'Helping & connecting people', value: 'helper'   },
+    ],
+    cols: 2,
+    next(answers) {
+      const v = answers.q1;
+      if (v === 'builder' || v === 'thinker') return 'q2_tech';
+      if (v === 'creator') return 'q2_creative';
+      return 'q2_people';
+    }
+  },
+
+  q2_tech: {
+    id: 'q2_tech',
+    text: 'What excites you more in tech or science?',
+    options: [
+      { emoji: '🤖', label: 'AI, data & algorithms', value: 'data'    },
+      { emoji: '🔧', label: 'Building & engineering',  value: 'eng'     },
+      { emoji: '🔬', label: 'Research & discovery',    value: 'research'},
+      { emoji: '💰', label: 'Business & finance',      value: 'biz'     },
+    ],
+    cols: 2,
+    next(answers) {
+      const v = answers.q2_tech;
+      if (v === 'data') return 'q3_data';
+      if (v === 'eng')  return 'q3_eng';
+      if (v === 'research') return 'q3_research';
+      return 'q3_biz';
+    }
+  },
+
+  q2_creative: {
+    id: 'q2_creative',
+    text: 'Which creative outlet calls to you most?',
+    options: [
+      { emoji: '✍️', label: 'Writing & storytelling',  value: 'writing'  },
+      { emoji: '🎭', label: 'Performance & acting',    value: 'perform'  },
+      { emoji: '🖼️', label: 'Visual design & art',     value: 'design'   },
+      { emoji: '🎵', label: 'Music & sound',           value: 'music'    },
+    ],
+    cols: 2,
+    next() { return 'q3_creative'; }
+  },
+
+  q2_people: {
+    id: 'q2_people',
+    text: 'How do you like helping others?',
+    options: [
+      { emoji: '🏥', label: 'Health & wellbeing',      value: 'health'  },
+      { emoji: '📚', label: 'Teaching & mentoring',    value: 'teach'   },
+      { emoji: '⚖️', label: 'Justice & advocacy',     value: 'law'     },
+      { emoji: '🌍', label: 'Community & social work', value: 'social'  },
+    ],
+    cols: 2,
+    next() { return 'q3_people'; }
+  },
+
+  /* ── TIER 3 ── */
+
+  q3_data: {
+    id: 'q3_data',
+    text: 'Are you more into patterns or building products?',
+    options: [
+      { emoji: '📊', label: 'Patterns, stats & insights', value: 'analyst' },
+      { emoji: '🛠️', label: 'Coding real products',       value: 'dev'     },
+    ],
+    cols: 2,
+    next() { return 'q4_data'; }
+  },
+
+  q3_eng: {
+    id: 'q3_eng',
+    text: 'Physical stuff or digital systems?',
+    options: [
+      { emoji: '🏗️', label: 'Physical — bridges, machines',  value: 'civil'    },
+      { emoji: '⚡', label: 'Electrical & hardware',         value: 'electrical'},
+      { emoji: '💻', label: 'Software & digital systems',    value: 'software'  },
+    ],
+    next() { return 'q4_eng'; }
+  },
+
+  q3_research: {
+    id: 'q3_research',
+    text: 'What area of research fascinates you most?',
+    options: [
+      { emoji: '🧬', label: 'Biology & medicine',   value: 'bio'     },
+      { emoji: '⚛️', label: 'Physics & materials', value: 'physics' },
+      { emoji: '🧪', label: 'Chemistry & materials', value: 'chem'  },
+      { emoji: '🌱', label: 'Environment & climate', value: 'env'   },
+    ],
+    cols: 2,
+    next() { return 'q4_research'; }
+  },
+
+  q3_biz: {
+    id: 'q3_biz',
+    text: 'What kind of business role suits you?',
+    options: [
+      { emoji: '📈', label: 'Strategy & consulting',  value: 'strat'  },
+      { emoji: '💵', label: 'Finance & investment',   value: 'finance'},
+      { emoji: '🚀', label: 'Startups & ventures',    value: 'startup'},
+      { emoji: '📣', label: 'Marketing & brand',      value: 'mkt'   },
+    ],
+    cols: 2,
+    next() { return 'q4_biz'; }
+  },
+
+  q3_creative: {
+    id: 'q3_creative',
+    text: 'Would you rather work solo or with a team?',
+    options: [
+      { emoji: '🎧', label: 'Solo, deep in my craft', value: 'solo' },
+      { emoji: '🎬', label: 'Collaborating on projects', value: 'collab' },
+    ],
+    cols: 2,
+    next() { return 'q4_creative'; }
+  },
+
+  q3_people: {
+    id: 'q3_people',
+    text: 'Do you prefer one-on-one or group impact?',
+    options: [
+      { emoji: '🫂', label: 'One-on-one deep connections', value: 'oneone' },
+      { emoji: '🏟️', label: 'Reaching large groups',      value: 'group'  },
+    ],
+    cols: 2,
+    next() { return 'q4_people'; }
+  },
+
+  /* ── TIER 4 — Refining questions ── */
+
+  q4_data: {
+    id: 'q4_data',
+    text: 'How do you feel about presenting ideas to others?',
+    options: [
+      { emoji: '🎤', label: 'Love it — I enjoy the stage', value: 'present' },
+      { emoji: '🙈', label: 'Prefer the code editor',      value: 'back'    },
+    ],
+    cols: 2,
+    next() { return 'q5'; }
+  },
+
+  q4_eng: {
+    id: 'q4_eng',
+    text: 'Do you prefer theory or hands-on building?',
+    options: [
+      { emoji: '📐', label: 'Theory & design first',   value: 'theory' },
+      { emoji: '🔩', label: 'Hands-on prototyping',    value: 'hands'  },
+    ],
+    cols: 2,
+    next() { return 'q5'; }
+  },
+
+  q4_research: {
+    id: 'q4_research',
+    text: 'Academic research or real-world application?',
+    options: [
+      { emoji: '🎓', label: 'Academic deep-dive',    value: 'academic' },
+      { emoji: '🏭', label: 'Industry application',   value: 'industry' },
+    ],
+    cols: 2,
+    next() { return 'q5'; }
+  },
+
+  q4_biz: {
+    id: 'q4_biz',
+    text: 'Risk-taker or steady analyst?',
+    options: [
+      { emoji: '🎲', label: 'Love calculated risks',   value: 'risk'   },
+      { emoji: '📋', label: 'Data & steady analysis',  value: 'steady' },
+    ],
+    cols: 2,
+    next() { return 'q5'; }
+  },
+
+  q4_creative: {
+    id: 'q4_creative',
+    text: 'Commercial success or pure artistic expression?',
+    options: [
+      { emoji: '💎', label: 'Pure expression matters most', value: 'art'  },
+      { emoji: '📦', label: 'Love commercial work too',     value: 'comm' },
+    ],
+    cols: 2,
+    next() { return 'q5'; }
+  },
+
+  q4_people: {
+    id: 'q4_people',
+    text: 'Would you work in policy or direct service?',
+    options: [
+      { emoji: '🏛️', label: 'Policy & systemic change',  value: 'policy'  },
+      { emoji: '🫶', label: 'Direct hands-on service',   value: 'service' },
+    ],
+    cols: 2,
+    next() { return 'q5'; }
+  },
+
+  /* ── TIER 5 — Final personality question ── */
+
+  q5: {
+    id: 'q5',
+    text: 'Pick your ideal work environment:',
+    options: [
+      { emoji: '🏢', label: 'Big company & structure',    value: 'corp'  },
+      { emoji: '🚀', label: 'Fast startup energy',        value: 'startup'},
+      { emoji: '🏡', label: 'Remote & flexible freedom',  value: 'remote'},
+      { emoji: '🌏', label: 'Non-profit / impact-driven', value: 'impact'},
+    ],
+    cols: 2,
+    next() { return null; } // triggers result
+  },
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   CAREER PATHS
+   Each has: id, emoji, title, desc, traits[], altCareers[]
+═══════════════════════════════════════════════════════════════ */
+const CAREERS = {
+
+  software_engineer: {
+    emoji: '💻',
+    title: 'Software Engineer',
+    desc: `You thrive turning logic into reality. As a software engineer, you'll architect systems, write elegant code, and ship products used by millions. The intersection of creativity and precision is where you live.`,
+    traits: ['Logical thinker', 'Problem solver', 'Detail-oriented', 'Builder'],
+    altCareers: ['DevOps Engineer', 'Mobile Developer', 'Cloud Architect', 'Game Developer'],
+  },
+
+  data_scientist: {
+    emoji: '📊',
+    title: 'Data Scientist / AI Engineer',
+    desc: `You see patterns where others see noise. You'll wrangle datasets, build machine learning models, and deliver insights that change decisions. The future of every industry runs on people like you.`,
+    traits: ['Analytical', 'Curious', 'Statistical thinker', 'Storyteller'],
+    altCareers: ['ML Engineer', 'Business Analyst', 'Quantitative Researcher', 'Data Engineer'],
+  },
+
+  product_designer: {
+    emoji: '🎨',
+    title: 'UX / Product Designer',
+    desc: `You obsess over how things feel to use. You'll craft interfaces, map user journeys, and turn complex systems into beautiful experiences. Every app or website that delights someone has a designer behind it.`,
+    traits: ['Empathetic', 'Visual thinker', 'Collaborative', 'User-obsessed'],
+    altCareers: ['Brand Designer', 'Design Researcher', 'Creative Director', 'Motion Designer'],
+  },
+
+  biomedical_researcher: {
+    emoji: '🧬',
+    title: 'Biomedical Researcher / Doctor',
+    desc: `You are driven by deep curiosity about life itself. Whether in a lab or clinic, you'll push the boundaries of what is possible in health and medicine. The work is hard — and so is the impact.`,
+    traits: ['Methodical', 'Patient', 'Science-driven', 'Purpose-led'],
+    altCareers: ['Pharmaceutical Scientist', 'Genetic Counselor', 'Epidemiologist', 'Surgeon'],
+  },
+
+  entrepreneur: {
+    emoji: '🚀',
+    title: 'Entrepreneur / Startup Founder',
+    desc: `You see problems and immediately wonder "what if I built a solution?" You'll take risks, rally teams, and build something from nothing. The chaos excites you — and so does the potential upside.`,
+    traits: ['Risk-tolerant', 'Visionary', 'Resilient', 'Scrappy'],
+    altCareers: ['Product Manager', 'VC Investor', 'Management Consultant', 'Business Developer'],
+  },
+
+  creative_professional: {
+    emoji: '✍️',
+    title: 'Creative Professional',
+    desc: `You feel most alive when making something that did not exist before — a story, a film, a song, a photograph. The world needs your voice, and there are more ways than ever to make a living from your craft.`,
+    traits: ['Imaginative', 'Expressive', 'Independent', 'Storyteller'],
+    altCareers: ['Content Strategist', 'Art Director', 'Screenwriter', 'Photographer'],
+  },
+
+  social_worker: {
+    emoji: '🤝',
+    title: 'Counselor / Social Worker',
+    desc: `You have a rare gift: making people feel seen and heard. As a counselor or social worker, you'll change lives one conversation at a time — addressing mental health, family issues, and systemic inequity head-on.`,
+    traits: ['Empathetic', 'Patient', 'Strong listener', 'Community-minded'],
+    altCareers: ['Therapist', 'School Counselor', 'Nonprofit Director', 'Public Health Worker'],
+  },
+
+  policy_analyst: {
+    emoji: '🏛️',
+    title: 'Policy Analyst / Lawyer',
+    desc: `You believe systems shape lives, and you want to shape those systems. Whether in government, law, or advocacy, you'll craft arguments, analyze laws, and fight for meaningful change at scale.`,
+    traits: ['Critical thinker', 'Persuasive', 'Justice-driven', 'Detail-focused'],
+    altCareers: ['Legislative Aide', 'Urban Planner', 'Human Rights Advocate', 'Attorney'],
+  },
+
+  educator: {
+    emoji: '📚',
+    title: 'Educator / Professor',
+    desc: `You light up when someone finally understands something you taught them. Teaching is multiplying yourself — your students carry your wisdom forward for decades. From classroom to university, there is no shortage of need.`,
+    traits: ['Patient', 'Communicative', 'Knowledgeable', 'Inspiring'],
+    altCareers: ['Curriculum Designer', 'Corporate Trainer', 'Education Technologist', 'School Principal'],
+  },
+
+  finance_professional: {
+    emoji: '💵',
+    title: 'Finance Professional / Analyst',
+    desc: `Numbers tell stories, and you have always known that. From investment banking to corporate finance to hedge funds, you'll evaluate risk, move capital, and help organizations grow.`,
+    traits: ['Quantitative', 'Detail-oriented', 'High-pressure tolerant', 'Strategic'],
+    altCareers: ['Investment Banker', 'Financial Planner', 'Actuary', 'Portfolio Manager'],
+  },
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   SCORING ENGINE
+   Maps answer patterns → career paths
+═══════════════════════════════════════════════════════════════ */
+
+/**
+ * Compute career recommendation from answers object.
+ * Returns a CAREERS key string.
+ * @param {Object} answers - { questionId: value }
+ */
+function computeCareer(answers) {
+
+  const { q1, q2_tech, q2_creative, q2_people, q3_data, q3_eng,
+          q3_research, q3_biz, q3_creative, q3_people,
+          q4_data, q4_biz, q4_creative, q4_people, q5 } = answers;
+
+  // ── Creative paths ──
+  if (q1 === 'creator') {
+    if (q3_creative === 'solo' || q4_creative === 'art') return 'creative_professional';
+    return 'product_designer';
+  }
+
+  // ── Helper paths ──
+  if (q1 === 'helper') {
+    if (q3_people === 'oneone') return 'social_worker';
+    if (q4_people === 'policy')  return 'policy_analyst';
+    if (q2_people === 'health') return 'biomedical_researcher';
+    if (q2_people === 'teach')  return 'educator';
+    return 'social_worker';
+  }
+
+  // ── Builder / Thinker paths ──
+  if (q2_tech === 'data') {
+    if (q3_data === 'analyst' || q4_data === 'present') return 'data_scientist';
+    return 'software_engineer';
+  }
+
+  if (q2_tech === 'eng') {
+    if (q3_eng === 'software') return 'software_engineer';
+    return 'software_engineer'; // simplification; real app could branch further
+  }
+
+  if (q2_tech === 'research') {
+    return 'biomedical_researcher';
+  }
+
+  if (q2_tech === 'biz') {
+    if (q4_biz === 'risk' || q5 === 'startup') return 'entrepreneur';
+    if (q3_biz === 'finance') return 'finance_professional';
+    if (q3_biz === 'mkt')     return 'creative_professional';
+    if (q5 === 'impact')       return 'policy_analyst';
+    return 'entrepreneur';
+  }
+
+  // ── Fallback ──
+  if (q5 === 'startup') return 'entrepreneur';
+  if (q5 === 'impact')  return 'social_worker';
+  return 'software_engineer';
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   APP STATE
+═══════════════════════════════════════════════════════════════ */
+
+const state = {
+  answers: {},           // { questionId: answerValue }
+  history: [],           // stack of question ids for back-navigation
+  currentId: null,       // active question id
+  questionNumber: 0,     // 1-indexed display number
+  totalQuestions: 10,    // approximate total shown in progress
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   RENDER FUNCTIONS
+═══════════════════════════════════════════════════════════════ */
+
+const screen   = document.getElementById('screen');
+const progWrap = document.getElementById('progressWrap');
+const progFill = document.getElementById('progressFill');
+const progLbl  = document.getElementById('progressLabel');
+
+/** Show intro screen */
+function renderIntro() {
+  progWrap.style.display = 'none';
+  screen.innerHTML = `
+    <div class="intro-card">
+      <span class="intro-icon">🔮</span>
+      <h1 class="intro-title">Find your <em>dream career</em> in 5 minutes</h1>
+      <p class="intro-sub">Answer a few fun questions and we'll figure out what career path fits your personality, skills, and ambitions.</p>
+      <div class="intro-pills">
+        <div class="intro-pill"><span>⚡</span> ~3 min</div>
+        <div class="intro-pill"><span>🎯</span> 10 questions</div>
+        <div class="intro-pill"><span>🗺️</span> 10 career paths</div>
+      </div>
+      <button class="start-btn" onclick="startQuiz()">Let's find out →</button>
+    </div>
+  `;
+}
+
+/** Render a question card with animation */
+function renderQuestion(qId, animIn = true) {
+  const q = QUESTIONS[qId];
+  if (!q) { renderResult(); return; }
+
+  state.currentId = qId;
+
+  // Update progress
+  progWrap.style.display = 'flex';
+  const pct = Math.min(((state.questionNumber - 1) / state.totalQuestions) * 100, 95);
+  progFill.style.width = pct + '%';
+  progLbl.textContent  = `${state.questionNumber} / ${state.totalQuestions}`;
+
+  const colsClass = q.cols === 2 ? 'cols-2' : '';
+
+  const optionsHTML = q.options.map(opt => `
+    <button class="opt-btn" onclick="selectAnswer('${qId}', '${opt.value}', this)">
+      <span class="emoji">${opt.emoji}</span>
+      <span>${opt.label}</span>
+    </button>
+  `).join('');
+
+  screen.innerHTML = `
+    <div class="card ${animIn ? 'slide-in' : ''}">
+      <div class="q-tag">Question ${state.questionNumber}</div>
+      <div class="question-text">${q.text}</div>
+      <div class="options ${colsClass}">${optionsHTML}</div>
+    </div>
+  `;
+}
+
+/** Render final result screen */
+function renderResult() {
+  const careerId = computeCareer(state.answers);
+  const career   = CAREERS[careerId];
+
+  progWrap.style.display = 'none';
+
+  const traitsHTML    = career.traits.map(t => `<span class="trait">${t}</span>`).join('');
+  const altHTML       = career.altCareers.map(c => `<span class="alt-career">${c}</span>`).join('');
+
+  screen.innerHTML = `
+    <div class="result-card">
+      <span class="result-badge">${career.emoji}</span>
+      <div class="result-tag">Your Career Match</div>
+      <h2 class="result-title">${career.title}</h2>
+      <p class="result-desc">${career.desc}</p>
+      <div class="traits">${traitsHTML}</div>
+      <div class="alt-section">
+        <div class="alt-label">You might also explore</div>
+        <div class="alt-careers">${altHTML}</div>
+      </div>
+      <button class="restart-btn" onclick="restartQuiz()">↺ Try again</button>
+    </div>
+  `;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   INTERACTION HANDLERS
+═══════════════════════════════════════════════════════════════ */
+
+/** Called when user taps an answer option */
+function selectAnswer(qId, value, btnEl) {
+  // Ripple effect
+  const ripple = document.createElement('span');
+  ripple.className = 'ripple';
+  const rect = btnEl.getBoundingClientRect();
+  const size = Math.max(rect.width, rect.height);
+  ripple.style.cssText = `width:${size}px;height:${size}px;left:${(rect.width-size)/2}px;top:${(rect.height-size)/2}px;`;
+  btnEl.appendChild(ripple);
+  setTimeout(() => ripple.remove(), 600);
+
+  // Highlight selected
+  document.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('selected'));
+  btnEl.classList.add('selected');
+
+  // Small delay for satisfying feel, then advance
+  setTimeout(() => advance(qId, value), 260);
+}
+
+/**
+ * Record answer and move to next question (or result).
+ */
+function advance(qId, value) {
+  // Save answer
+  state.answers[qId] = value;
+  state.history.push(qId);
+  state.questionNumber++;
+
+  const q = QUESTIONS[qId];
+  const nextId = q.next(state.answers);
+
+  // Animate out current card
+  const card = screen.querySelector('.card');
+  if (card) {
+    card.classList.add('slide-out');
+    setTimeout(() => {
+      if (nextId) {
+        renderQuestion(nextId, true);
+      } else {
+        renderResult();
+      }
+    }, 280);
+  } else {
+    if (nextId) renderQuestion(nextId, true);
+    else         renderResult();
+  }
+}
+
+/** Start / restart the quiz */
+function startQuiz() {
+  state.answers       = {};
+  state.history       = [];
+  state.questionNumber = 1;
+  renderQuestion('q1');
+}
+
+function restartQuiz() {
+  startQuiz();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════════════════ */
+renderIntro();
+</script>
+</body>
+</html>
