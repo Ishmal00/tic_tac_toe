@@ -1,9 +1,0 @@
-echo "# tic_tac_toe" >> README.md
-git init
-git add .
-git commit -m "Initial commit"
-git branch -M main
-git remote add origin https://github.com/Ishmal00/tic_tac_toe.git
-git push -u origin main
-
-<<<ese ap apna project git hub pe upload krskti ho through commands>>>
